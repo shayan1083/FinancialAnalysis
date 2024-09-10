@@ -1,0 +1,8 @@
+numpy
+pandas
+ipykernel
+yfinance
+mysql-connector-python
+sqlalchemy
+praw
+python-dotenv
