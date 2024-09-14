@@ -1,8 +1,13 @@
-numpy
+numpy==2.1.0
 pandas
+scipy==1.14.0
 ipykernel
 yfinance
 mysql-connector-python
 sqlalchemy
 praw
 python-dotenv
+vaderSentiment
+scikit-learn
+statsmodels==0.14.2
+matplotlib
