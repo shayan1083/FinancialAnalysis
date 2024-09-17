@@ -23,7 +23,7 @@ def create_reddit_connection():
     
 def gather_financial_data(ticker: str):
     msft = yf.Ticker(ticker)
-    hist = msft.history(period="1y")
+    hist = msft.history(period="5y")
     fin_data = pd.DataFrame(hist)
     fin_data.drop(columns=['Dividends','Stock Splits'], inplace=True)
     fin_data.index = pd.to_datetime(fin_data.index).date
@@ -39,7 +39,7 @@ def gather_headline_data(ticker: str):
                     'query':f'title:"{ticker}"',
                     'sort':'relevance',
                     'syntax':'lucene',
-                    'time_filter':'year'
+                    'time_filter':'all'
                     }
     generator_params = { 
                     'limit':1000
@@ -78,32 +78,13 @@ def sentiment_per_date():
 def prepare_time_series():
     engine = open_sql_connection()
     query = '''
-    SELECT fd.record_date, fd.close_price, COALESCE(ds.sentiment_score, 0) AS score
+    SELECT fd.record_date, fd.open_price, fd.high_price, fd.low_price, fd.close_price, fd.volume, COALESCE(ds.sentiment_score, 0) AS score
     FROM financial_data AS fd
     LEFT JOIN date_score AS ds
     ON fd.record_date = ds.date;
     '''
     df = pd.read_sql(query, engine)
-    df['lag_1'] = df['close_price'].shift(1)
-    df['lag_2'] = df['close_price'].shift(2)
-    df['daily_return'] = df['close_price'].pct_change(1)
-    df['log_return'] = np.log(df['close_price'] / df['close_price'].shift(1))
-    df['volatility_14'] = df['daily_return'].rolling(window=14).std()
-    df['ma_10'] = df['close_price'].rolling(window=10).mean()
-    df['ema_10'] = df['close_price'].ewm(span=10, adjust=False).mean()
-    def compute_rsi(data, window=14):
-        delta = data.diff(1)
-        gain = delta.where(delta > 0, 0.0)
-        loss = delta.where(delta < 0, 0.0)
-        avg_gain = gain.rolling(window=window, min_periods=1).mean()
-        avg_loss = loss.rolling(window=window, min_periods=1).mean()
-        rs = avg_gain / avg_loss
-        rsi = 100 - (100 / (1 + rs))
-        return rsi
-    df['rsi_14'] = compute_rsi(df['close_price'], window=14)
-    df['std_10'] = df['close_price'].rolling(window=10).std()
-    df['bollinger_upper'] = df['ma_10'] + (df['std_10']*2)
-    df['bollinger_lower'] = df['ma_10'] - (df['std_10']*2)
+    
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
     df = df.dropna()
     df.to_sql(name='time_series_data', con=engine, if_exists='replace', index=False)

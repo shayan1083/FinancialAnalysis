@@ -1,4 +1,4 @@
-numpy==2.1.0
+numpy==1.26.4
 pandas
 scipy==1.14.0
 ipykernel
@@ -11,3 +11,5 @@ vaderSentiment
 scikit-learn
 statsmodels==0.14.2
 matplotlib
+pmdarima
+arch
