@@ -1,27 +1,25 @@
 A project to learn about time series analysis and some machine learning applications for financial data.
 
 Possible Applications
-- Predict daily returns
-- Forecast volatility
-- Predict direction of stock movement
-- Relative performance
+1) Daily Returns
 
+2) Volatility:
+- The extent of price fluctuations over a certain period of time. Forecasting volatility helps traders assess risk by showing how much they can expect the assets price to vary in the future.
+- Models like ARCH can be used to forecast volatility, which captures patterns in how periods of high volatility tend to be followed by more high volatility
+- High expected volatility could suggest larger price moves, making options trading more attractive
+- Low expected volatility could suggest smaller price moves, making conservative trading more attractive
 
+3) Price Trends:
+- Trends indicate the generate direction in which the market is moving
+- Moving averages, exponential moving averages, MACD, or trendlines are used to identify these trends
+- If there is an uptrend, traders may look to buy on pullbacks (buying the dip)
+- If there is a downtrend, they may consider shorting or using inverse ETFs
+- During Sideways movements, strategies like selling options may be more effective
 
-Plan:
+4) Market Regimes:
+- Market regimes classify the broad condition of the market into different phases like bullish (upward trend), bearish (downward trend), or sideways (no clear trend)
+- Regime-switching models (ex: Markov-switching models) or simple trend-following techniques can ebe used to identify these states
+- In bullish markets, momentum based strategies that follow trends tend to work well
+- In bearish markets, capital preservation strategies may be more effective
 
-1) Gather Data
-- Gather financial data, for now I will use msft
-- Gather headlines and social media data, registered for reddit api and will use praw to get data
-2) Preprocess Data
-- use time series analysis methods like adding lagged values or moving averages, will determine specifics later
-- aggregate sentiment scores for each day, and use this as an additional input for time series
-3) Build Model
-- Use a model to handle time series data. I starting with simple models and adding more complex ones afterwards
-- Naive -> Exponential Smoothing -> Winter-Holts -> ARIMA -> GARCH -> ARIMA-GARCH -> Boosted Trees -> RNN -> LSTM -> TFT
-- incorporate sentiment score as an additional input feature with the time series data. The model should consider both historical and sentiment data to make predictions
-4) Predict Stock Movement
-- The model should output the daily return
-5) Evaluate
-- evaluate the model
 
