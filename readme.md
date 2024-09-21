@@ -22,4 +22,8 @@ Possible Applications
 - In bullish markets, momentum based strategies that follow trends tend to work well
 - In bearish markets, capital preservation strategies may be more effective
 
-
+5) Exchange Rate Forecasting:
+- Exchange rates represent the value of one currency relative to another. These rates are influenced by factors like interest rates, trade balances, and geopolitical events
+- Exchange rates exhibit trends over time
+- In an appreciating trend, traders may buy the stronger currency
+- In a depreciating trend, traders may sell or short the weaker currency

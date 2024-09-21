@@ -13,3 +13,4 @@ statsmodels==0.14.2
 matplotlib
 pmdarima
 arch
+openpyxl
