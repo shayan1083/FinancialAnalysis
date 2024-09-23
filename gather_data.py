@@ -8,6 +8,8 @@ import os
 import praw
 from time import strftime, localtime
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+import warnings
+warnings.filterwarnings("ignore")
 
 def open_sql_connection():
     load_dotenv()
@@ -131,31 +133,58 @@ def read_inflation_data():
 def read_interest_rate_data():
     euro_interest_rate_path = 'InterestRates/EuroInterestRate.xlsx'
     euro_interest_rate = pd.read_excel(euro_interest_rate_path, skiprows=14)
-    e_interest = euro_interest_rate[['DATE', 'Main refinancing operations - fixed rate tenders (fixed rate) (date of changes) - Level (FM.B.U2.EUR.4F.KR.MRR_FR.LEV)']]
-    e_interest.rename(columns={'Main refinancing operations - fixed rate tenders (fixed rate) (date of changes) - Level (FM.B.U2.EUR.4F.KR.MRR_FR.LEV)': 'Euro Interest Rate'}, inplace=True)
+    e_interest = euro_interest_rate[['DATE', 'Main refinancing operations - Minimum bid rate/fixed rate (date of changes) - Level (FM.D.U2.EUR.4F.KR.MRR_RT.LEV)']]
+    e_interest.rename(columns={'Main refinancing operations - Minimum bid rate/fixed rate (date of changes) - Level (FM.D.U2.EUR.4F.KR.MRR_RT.LEV)': 'Euro Interest Rate'}, inplace=True)
     e_interest['DATE'] = pd.to_datetime(e_interest['DATE'])
     e_interest['DATE'] = e_interest['DATE'].dt.to_period('M')
-
+    e_interest = e_interest.drop_duplicates(subset=['DATE'])
+    
     us_interest_rate_path = 'InterestRates/USInterestRate.xlsx'
     us_interest_rate = pd.read_excel(us_interest_rate_path, skiprows=10)
     u_interest = us_interest_rate[['observation_date', 'FEDFUNDS']]
     u_interest.rename(columns={'observation_date': 'DATE', 'FEDFUNDS': 'US Interest Rate'}, inplace=True)
     u_interest['DATE'] = pd.to_datetime(u_interest['DATE'])
     u_interest['DATE'] = u_interest['DATE'].dt.to_period('M')
-    
     return e_interest, u_interest
+
+def read_gdp_data():
+    euro_gdp_path = 'GDPGrowth/EuroGDP.xlsx'
+    euro_gdp = pd.read_excel(euro_gdp_path, skiprows=14)
+    e_gdp = euro_gdp[['DATE', 'GDP volume growth (economic growth) (MNA.Q.Y.I8.W2.S1.S1.B.B1GQ._Z._Z._Z.EUR.LR.GY)']]
+    e_gdp.rename(columns={'GDP volume growth (economic growth) (MNA.Q.Y.I8.W2.S1.S1.B.B1GQ._Z._Z._Z.EUR.LR.GY)': 'Euro_GDP_Growth'}, inplace=True)
+    e_gdp['DATE'] = pd.to_datetime(e_gdp['DATE'])
+    e_gdp.set_index('DATE', inplace=True)
+    e_gdp = e_gdp.resample('M').ffill()
+    e_gdp.reset_index(inplace=True)
+    e_gdp['DATE'] = e_gdp['DATE'].dt.to_period('M')
+
+    us_gdp_path = 'GDPGrowth/USGDP.xlsx'
+    us_gdp = pd.read_excel(us_gdp_path, skiprows=10)
+    u_gdp = us_gdp[['observation_date', 'GDP_PCH']]
+    u_gdp.rename(columns={'observation_date': 'DATE', 'GDP_PCH': 'US_GDP_Growth'}, inplace=True)
+    u_gdp['DATE'] = pd.to_datetime(u_gdp['DATE'])
+    u_gdp.set_index('DATE', inplace=True)
+    u_gdp = u_gdp.resample('M').ffill()
+    u_gdp.reset_index(inplace=True)
+    u_gdp['DATE'] = u_gdp['DATE'].dt.to_period('M')
+
+    return e_gdp, u_gdp
 
 def combine_economic_data():
     e_cci, u_cci = read_CCI_data()
     e_inflation, u_inflation = read_inflation_data()
+    e_gdp, u_gdp = read_gdp_data()
     e_interest, u_interest = read_interest_rate_data()
     combined_df = e_cci.merge(u_cci, on='DATE')\
                       .merge(e_inflation, on='DATE')\
                       .merge(u_inflation, on='DATE')\
-                      .merge(e_interest, on='DATE', how='outer')\
+                      .merge(e_gdp, on='DATE')\
+                      .merge(u_gdp, on='DATE')\
+                      .merge(e_interest, on='DATE', how='left')\
                       .merge(u_interest, on='DATE')
     combined_df = combined_df.rename(columns={'DATE': 'record_date'})
     combined_df['record_date'] = combined_df['record_date'].dt.to_timestamp().dt.date
+    # print(combined_df)
     engine = open_sql_connection()
     combined_df.to_sql(name='economic_indicators', con=engine, if_exists='replace', index=False)
 
